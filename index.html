@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ChatApp</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<!-- Auth Screen -->
+<div id="auth-screen">
+  <div class="logo">chat App</div>
+  <div class="subtitle">real-time messaging over websockets</div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">login</button>
+    <button class="tab" onclick="switchTab('register')">register</button>
+  </div>
+
+  <div id="login-form">
+    <div class="form-group">
+      <label>email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label>password</label>
+      <input type="password" id="login-password" placeholder="••••••••"/>
+    </div>
+    <button class="btn" onclick="handleLogin()">login →</button>
+    <div id="login-msg" class="msg-small"></div>
+  </div>
+
+  <div id="register-form" style="display:none">
+    <div class="form-group">
+      <label>email</label>
+      <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label>password</label>
+      <input type="password" id="reg-password" placeholder="min 8 characters"/>
+    </div>
+    <button class="btn" onclick="handleRegister()">create account →</button>
+    <div id="reg-msg" class="msg-small"></div>
+  </div>
+</div>
+
+<!-- Chat Screen -->
+<div id="chat-screen">
+  <div class="chat-header">
+    <div class="chat-header-left">
+      <div class="chat-logo">chat://</div>
+      <div class="status-dot" id="status-dot"></div>
+    </div>
+    <div class="user-info" id="user-info"></div>
+    <button class="logout-btn" onclick="handleLogout()">disconnect</button>
+  </div>
+
+  <div class="chat-body">
+    <div class="sidebar">
+      <div class="sidebar-header">recipient</div>
+      <div class="recipient-input-wrap">
+        <label>user id</label>
+        <input type="number" id="recipient-id" placeholder="e.g. 2"/>
+        <button class="connect-btn" onclick="setRecipient()">start chat →</button>
+      </div>
+      <div class="active-chat-info">
+        <div>User's Online</div>
+        <div class="chatting-with" id="chatting-with">—</div>
+      </div>
+    </div>
+
+    <div class="messages-wrap">
+      <div id="messages">
+        <div class="system-msg">connected. enter a user id to start chatting.</div>
+      </div>
+
+      <div class="input-bar">
+        <input type="text" id="message-input" placeholder="type a message..." disabled
+          onkeydown="if(event.key==='Enter') sendMessage()"/>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>send</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/index.js"></script>
+</body>
+</html>
