@@ -3,14 +3,14 @@
   *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:        #8d6d6d;
-    --surface:   #0c0b0b;
+    /* --bg:        #f9f4f4;
+    --surface:   #6a3319;
     --border:    #222222;
-    --accent:    #e4caca;
-    --accent-dim:#a6a0a020;
-    --text:      #f5efef;
-    --muted:     #555;
-    --danger:    #ff4d4d;
+    --accent:    #dabaa1;
+    --accent-dim:#a6a0a020;*/
+    --text:      #0c0b0b; 
+    /* --muted:     #555;
+    --danger:    #ff4d4d; */ 
     --mono:      'IBM Plex Mono', monospace;
     --sans:      'IBM Plex Sans', sans-serif;
     --radius:    6px;

@@ -3,7 +3,8 @@
   let currentUserId = null;
   let currentEmail = null;
   let recipientId = null;
-  let ws = null;
+  let ws = new WebSocket('ws://localhost:3000');
+  let currentUsername = null;
 
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -15,16 +16,17 @@
   //Register
   async function handleRegister() {
     const email = document.getElementById('reg-email').value.trim();
+    const username = document.getElementById('reg-username').value.trim();
     const password = document.getElementById('reg-password').value;
     const msg = document.getElementById('reg-msg');
 
-    if (!email || !password) { showMsg(msg, 'email and password required', 'error'); return; }
+    if (!email ||!username ||!password) { showMsg(msg, 'All fields are required', 'error'); return; }
 
     try {
       const res = await fetch(`${API}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email,username,password })
       });
       const data = await res.json();
       if (!res.ok) 
@@ -33,7 +35,7 @@
         return;
       }
 
-      showMsg(msg, `account created! your id: ${data.user.id} now login`, 'success');
+      showMsg(msg, `account created! your id: ${data.user.id} with username: ${data.user.username} , Please Login`, 'success');
 
     } catch (e) {
       showMsg(msg, 'connection error', 'error');
@@ -44,6 +46,7 @@
   async function handleLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
+    // const username = document.getElementById('reg-username').value.trim();
     const msg = document.getElementById('login-msg');
 
     if (!email || !password) { showMsg(msg, 'email and password required', 'error'); return; }
@@ -60,6 +63,7 @@
       token = data.token;
       currentUserId = data.user.id;
       currentEmail = data.user.email;
+      // currentUsername = data.user.username;
 
       enterChat();
     } catch (e) {
@@ -71,12 +75,13 @@
   function enterChat() {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('chat-screen').classList.add('visible');
-    document.getElementById('user-info').textContent = `${currentEmail} (id: ${currentUserId})`;
+    document.getElementById('user-info').textContent = `${currentUsername}`; 
     connectWebSocket();
   }
 
   //WebSocket
   function connectWebSocket() {
+    // Choose a protocol based on the current page's protocol to avoid mixed content issues
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${location.host}?token=${token}`;
 
@@ -101,6 +106,8 @@
         addSystemMessage(data.message, 'success');
       } else if (data.type === 'error') {
         addSystemMessage(data.message);
+      }else if (data.type === 'message') {
+        addMessage(data.content, 'received', data.from, data.timestamp, data.fromUsername); 
       }
     };
 
@@ -140,14 +147,13 @@
   }
 
   //Add message to Ui
-  function addMessage(content, direction, fromId, timestamp) {
+  function addMessage(content, direction, fromId, timestamp, fromUsername) {
+    const who = direction === 'received' ? `${data.fromUsername || 'user #' + data.from}` : currentUsername;
     const container = document.getElementById('messages');
-
     const div = document.createElement('div');
     div.className = `message ${direction}`;
-
     const time = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-    const who = direction === 'received' ? `user #${fromId}` : 'you';
+    // const who = direction === 'received' ? `user #${fromId}` : 'you';
 
     div.innerHTML = `
       <div class="message-bubble">${escapeHtml(content)}</div>
