@@ -1,4 +1,4 @@
-  const API = 'https://chatappbackend-production-9cd3.up.railway.app/';
+  const API = 'https://chatappbackend-production-9cd3.up.railway.app';
   let token = null;
   let currentUserId = null;
   let currentEmail = null;
@@ -78,7 +78,7 @@
 
   //WebSocket
   function connectWebSocket() {
-    const wsUrl =`https://chatappbackend-production-9cd3.up.railway.app/?token=${token}`;
+    const wsUrl = `wss://chatappbackend-production-9cd3.up.railway.app/?token=${token}`;
     ws = new WebSocket(wsUrl);
     ws.onopen = () => {
       document.getElementById('status-dot').classList.add('online');
