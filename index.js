@@ -3,7 +3,7 @@
   let currentUserId = null;
   let currentEmail = null;
   let recipientId = null;
-  let ws = new WebSocket('ws://localhost:3000');
+  let ws = null;
   let currentUsername = null;
 
   function switchTab(tab) {
@@ -46,8 +46,8 @@
   async function handleLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-    // const username = document.getElementById('reg-username').value.trim();
     const msg = document.getElementById('login-msg');
+    console.log(email, password);
 
     if (!email || !password) { showMsg(msg, 'email and password required', 'error'); return; }
 
@@ -55,7 +55,7 @@
       const res = await fetch(`${API}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password})
       });
       const data = await res.json();
       if (!res.ok) { showMsg(msg, data.error, 'error'); return; }
@@ -63,11 +63,11 @@
       token = data.token;
       currentUserId = data.user.id;
       currentEmail = data.user.email;
-      // currentUsername = data.user.username;
-
+      currentUsername = data.user.username;
       enterChat();
     } catch (e) {
-      showMsg(msg, 'connection error', 'error');
+      // showMsg(msg, 'connection error', 'error');
+      console.error(e);
     }
   }
 
@@ -77,37 +77,39 @@
     document.getElementById('chat-screen').classList.add('visible');
     document.getElementById('user-info').textContent = `${currentUsername}`; 
     connectWebSocket();
+    loadUsers();
   }
 
   //WebSocket
   function connectWebSocket() {
     // Choose a protocol based on the current page's protocol to avoid mixed content issues
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${location.host}?token=${token}`;
-
+    // const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    // const wsUrl = `${protocol}//${location.host}?token=${token}`;
+    const wsUrl =`ws://localhost:3000?token=${token}`;
     ws = new WebSocket(wsUrl);
-
     ws.onopen = () => {
       document.getElementById('status-dot').classList.add('online');
     };
+    // FIXME: Errors on onmessage function - corrections needed
+    // FIXME: addmessage function too has some errors
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      console.log('WS received:', data); 
 
       if (data.type === 'connected') {
         addSystemMessage('websocket connected', 'success');
       } else if (data.type === 'message') {
-        addMessage(data.content, 'received', data.from, data.timestamp);
+        addMessage(data.content, 'received', data.from, data.timestamp, 
+          data.fromUsername ||`user #${data.from}`); 
       } else if (data.type === 'delivered') {
-        // already shown as sent
+        // FixME
       } else if (data.type === 'queued') {
         addSystemMessage('user offline: message saved, will deliver on reconnect');
       } else if (data.type === 'info') {
         addSystemMessage(data.message, 'success');
       } else if (data.type === 'error') {
-        addSystemMessage(data.message);
-      }else if (data.type === 'message') {
-        addMessage(data.content, 'received', data.from, data.timestamp, data.fromUsername); 
+        addSystemMessage(data.error);
       }
     };
 
@@ -120,19 +122,41 @@
       addSystemMessage('websocket error');
     };
   }
+  async function loadUsers() {
+    try {
+      const res = await fetch(`${API}/api/users`,{
+        headers:{ 'Authorization': `Bearer ${token}`}
+      });
+      const users = await res.json();
+      const select = document.getElementById('user-select');
+
+      users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.id;
+        option.textContent = user.username;
+        select.appendChild(option);
+      });      
+    } catch (err){
+      console.error('Failed to load users:', err);      
+    }
+  }
 
   //Set recipient
-  function setRecipient() {
-    const val = parseInt(document.getElementById('recipient-id').value);
-    if (!val || isNaN(val)) return;
+  function setRecipient(){
+    const select = document.getElementById('user-select');
+    const selectId = parseInt(select.value);
+    const selectedUsername = select.options[select.selectedIndex].text;
 
-    recipientId = val;
-    document.getElementById('chatting-with').textContent = `user #${recipientId}`;
+    if (!selectId) return;
+    
+    recipientId = selectId;
+    // document.getElementById('chatting-with').textContent = selectedUsername;
     document.getElementById('message-input').disabled = false;
     document.getElementById('send-btn').disabled = false;
     document.getElementById('message-input').focus();
-    addSystemMessage(`chatting with user #${recipientId}`);
+    addSystemMessage(`you are now chatting with ${selectedUsername}`);
   }
+
 
   //Send message
   function sendMessage() {
@@ -148,12 +172,11 @@
 
   //Add message to Ui
   function addMessage(content, direction, fromId, timestamp, fromUsername) {
-    const who = direction === 'received' ? `${data.fromUsername || 'user #' + data.from}` : currentUsername;
+    const who = direction === 'received' ? `${fromUsername || 'user #' + fromId}` : '';
     const container = document.getElementById('messages');
     const div = document.createElement('div');
     div.className = `message ${direction}`;
     const time = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-    // const who = direction === 'received' ? `user #${fromId}` : 'you';
 
     div.innerHTML = `
       <div class="message-bubble">${escapeHtml(content)}</div>
