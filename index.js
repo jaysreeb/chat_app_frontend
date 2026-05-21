@@ -47,10 +47,7 @@
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const msg = document.getElementById('login-msg');
-    console.log(email, password);
-
     if (!email || !password) { showMsg(msg, 'email and password required', 'error'); return; }
-
     try {
       const res = await fetch(`${API}/api/auth/login`, {
         method: 'POST',
@@ -66,8 +63,7 @@
       currentUsername = data.user.username;
       enterChat();
     } catch (e) {
-      // showMsg(msg, 'connection error', 'error');
-      console.error(e);
+      showMsg(msg, 'connection error', 'error');
     }
   }
 
@@ -82,17 +78,11 @@
 
   //WebSocket
   function connectWebSocket() {
-    // Choose a protocol based on the current page's protocol to avoid mixed content issues
-    // const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // const wsUrl = `${protocol}//${location.host}?token=${token}`;
     const wsUrl =`ws://localhost:3000?token=${token}`;
     ws = new WebSocket(wsUrl);
     ws.onopen = () => {
       document.getElementById('status-dot').classList.add('online');
     };
-    // FIXME: Errors on onmessage function - corrections needed
-    // FIXME: addmessage function too has some errors
-
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log('WS received:', data); 
@@ -103,7 +93,7 @@
         addMessage(data.content, 'received', data.from, data.timestamp, 
           data.fromUsername ||`user #${data.from}`); 
       } else if (data.type === 'delivered') {
-        // FixME
+        // Fixme: Later
       } else if (data.type === 'queued') {
         addSystemMessage('user offline: message saved, will deliver on reconnect');
       } else if (data.type === 'info') {
@@ -150,7 +140,6 @@
     if (!selectId) return;
     
     recipientId = selectId;
-    // document.getElementById('chatting-with').textContent = selectedUsername;
     document.getElementById('message-input').disabled = false;
     document.getElementById('send-btn').disabled = false;
     document.getElementById('message-input').focus();
