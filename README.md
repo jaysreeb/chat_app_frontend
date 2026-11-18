@@ -28,5 +28,3 @@ VITE_WS_URL=ws://localhost:3000
 - `GET /api/users`: Bearer access token; returns an array of `{ id, username }` or `{ users: [...] }`
 - WebSocket URL: `ws://localhost:3000/?token=<accessToken>`
 - Outgoing message: `{ "type": "message", "to": <userId>, "content": "..." }`
-
-The UI displays messages received during the current session. It does not load prior chat history because the backend code shared so far does not expose a history endpoint. The UI keeps the access token in memory and attempts session restoration through the refresh cookie after reload.
